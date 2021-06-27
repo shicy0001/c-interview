@@ -29,6 +29,19 @@ const_cast只能改变对象的底层const，除了const 或volatile修饰之外
 4. reinpreter_cast<type-id>(expression)  
 几乎什么都可以转，可能会出问题，尽量少用
 
+### C语言几个拷贝函数
+1.char* strcpy(char *dst, char *src);
+2.char* strncpy(char *dst, char *src);
+3.void* memcpy(void *dst, void *src, size_t num);
+4.void *memmove(void *dest, const void *src, size_t num);
+
+区别：  
+1.strcpy和strncpy只能拷贝字符串，memcpy、memmove是按字节拷贝，可以拷贝任意数据类型；
+2.memcpy、strncpy、memmove比strcpy更安全；
+3.strcpy、strncpy、memcpy都要注意dst和src内存重叠的问题，memmove在内存重叠的情况下可以正常拷贝，方法是把src先拷贝到类似缓冲区，再把缓冲区的内容拷贝到dst，效率应该会比memcpy差。
+
+
+
 ### 指针和引用的区别  
 1. 指针和引用的实现原理一样，引用本质是个常量指针，可以看汇编代码验证；
 2. 使用上的区别：指针可以初始化为NULL，而引用必须被初始化且必须是一个已有对象的引用；作为参数传递时，指针需要解引用才可以对对象进行操作，引用不需要；指针可以改变指向，但引用本质是指针常量，不可以改变；
@@ -190,6 +203,13 @@ map和set的底层实现都是红黑树。
  unordered_map：散列表
 
 
+### STL多线程不安全  
+STL多线程不安全，所以在读取、删除、插入元素时，必须保证原子操作。  
+《Effective STL》条款：  
+1)在每次调用容器的成员函数期间都要锁定该容器。 
+2)在每个容器返回的迭代器（例如通过调用begin或end）的生存期之内都要锁定该容器。  
+3)在每个在容器上调用的算法执行期间锁定该容器。
+
 
 
 
@@ -264,7 +284,12 @@ DNS/HTTP(HTTPS)属于应用层，TCP/UDP属于传输层，IP/ARP属于网络层�
 1. 服务器端：socket()->sendto()/recvfrom()->close()
 2. 客户端：socket()->sendto()/recvfrom()->close()
 
-### 网络编程模型
+### 网络编程模型  
+
+### TCP粘包  
+1. 发送端先发送100个字节，再发送100个字节，接收端会分别收到两次100个字节吗？不一定。TCP是流式连接，数据包之间没有界限，另外TCP协议会把发送端的数据包缓存起来合并成一个数据包发送（NAGLE算法，这样可以获得更高的效率，另外网络中有MTU的概念，当数据包超过MTU就需要分包发送。接收端收到的数据和发送的数据不一致，这个就是粘包现象。
+2. 常用解决方法：1）使用分隔符，即选定固定字符作为数据包结束标志，但是二进制数据中很难确定这个固定字符是结束标志还是本来就要传输的数据；2）在每次发送数据时写入数据包的长度。
+
 
 
 ## 数据库  
